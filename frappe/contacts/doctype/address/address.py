@@ -58,7 +58,8 @@ class Address(Document):
 	def validate_reference(self):
 		if self.is_your_company_address:
 			if not [row for row in self.links if row.link_doctype == "Company"]:
-				frappe.throw(_("Company is mandatory, as it is your company address"))
+				frappe.throw(_("Address needs to be linked to a Company. Please add a row for Company in the Links table below."),
+					title =_("Company not Linked"))
 
 	def get_display(self):
 		return get_address_display(self.as_dict())
@@ -200,6 +201,8 @@ def get_company_address(company):
 
 	return ret
 
+@frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
 def address_query(doctype, txt, searchfield, start, page_len, filters):
 	from frappe.desk.reportview import get_match_cond
 
@@ -207,16 +210,17 @@ def address_query(doctype, txt, searchfield, start, page_len, filters):
 	link_name = filters.pop('link_name')
 
 	condition = ""
-	for fieldname, value in iteritems(filters):
-		condition += " and {field}={value}".format(
-			field=fieldname,
-			value=value
-		)
-
 	meta = frappe.get_meta("Address")
+	for fieldname, value in iteritems(filters):
+		if meta.get_field(fieldname) or fieldname in frappe.db.DEFAULT_COLUMNS:
+			condition += " and {field}={value}".format(
+				field=fieldname,
+				value=frappe.db.escape(value))
+
 	searchfields = meta.get_search_fields()
 
-	if searchfield:
+	if searchfield and (meta.get_field(searchfield)\
+				or searchfield in frappe.db.DEFAULT_COLUMNS):
 		searchfields.append(searchfield)
 
 	search_condition = ''

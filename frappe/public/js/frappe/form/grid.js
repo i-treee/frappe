@@ -577,8 +577,8 @@ export default class Grid {
 				}
 				else {
 					var colsize = 2;
-					switch(df.fieldtype) {
-						case "Text":
+					switch (df.fieldtype) {
+						case "Text": break;
 						case "Small Text": colsize = 3; break;
 						case "Check": colsize = 1;
 					}
@@ -673,6 +673,10 @@ export default class Grid {
 					as_dataurl: true,
 					allow_multiple: false,
 					on_success(file) {
+						if (file.file_obj.type !== "text/csv") {
+							let msg = __(`Your file could not be processed. It should be a standard CSV file.`);
+							frappe.throw(msg);
+						}
 						var data = frappe.utils.csv_to_array(frappe.utils.get_decoded_string(file.dataurl));
 						// row #2 contains fieldnames;
 						var fieldnames = data[2];

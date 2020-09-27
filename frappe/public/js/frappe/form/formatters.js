@@ -70,7 +70,10 @@ frappe.form.formatters = {
 
 			if ( decimals.length < 3 || decimals.length < precision ) {
 				const fraction = frappe.model.get_value(":Currency", currency, "fraction_units") || 100; // if not set, minimum 2.
-				precision      = cstr(fraction).length - 1;
+
+				if (decimals.length < cstr(fraction).length) {
+					precision = cstr(fraction).length - 1;
+				}
 			}
 		}
 
@@ -197,13 +200,7 @@ frappe.form.formatters = {
 		return html;
 	},
 	Comment: function(value) {
-		var html = "";
-		$.each(JSON.parse(value || "[]"), function(i, v) {
-			if(v) html+= '<span class="label label-warning" \
-				style="margin-right: 7px;"\
-				data-field="_comments" data-label="'+v.name+'">'+v.comment+'</span>';
-		});
-		return html;
+		return value;
 	},
 	Assign: function(value) {
 		var html = "";

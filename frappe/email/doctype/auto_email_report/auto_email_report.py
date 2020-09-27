@@ -66,7 +66,7 @@ class AutoEmailReport(Document):
 			self.prepare_dynamic_filters()
 
 		columns, data = report.get_data(limit=self.no_of_rows or 100, user = self.user,
-			filters = self.filters, as_dict=True)
+			filters = self.filters, as_dict=True, ignore_prepared_report=True)
 
 		# add serial numbers
 		columns.insert(0, frappe._dict(fieldname='idx', label='', width='30px'))
@@ -213,8 +213,10 @@ def send_daily():
 		elif auto_email_report.frequency == 'Weekly':
 			if auto_email_report.day_of_week != current_day:
 				continue
-
-		auto_email_report.send()
+		try:
+			auto_email_report.send()
+		except Exception as e:
+			frappe.log_error(e, _('Failed to send {0} Auto Email Report').format(auto_email_report.name))
 
 
 def send_monthly():

@@ -109,9 +109,10 @@ frappe.views.BaseList = class BaseList {
 		this.fields = this.fields.uniqBy(f => f[0] + f[1]);
 	}
 
-	_add_field(fieldname) {
+	_add_field(fieldname, doctype) {
 		if (!fieldname) return;
-		let doctype = this.doctype;
+
+		if (!doctype) doctype = this.doctype;
 
 		if (typeof fieldname === 'object') {
 			// df is passed
@@ -119,6 +120,8 @@ frappe.views.BaseList = class BaseList {
 			fieldname = df.fieldname;
 			doctype = df.parent;
 		}
+
+		if (!this.fields) this.fields = [];
 
 		const is_valid_field = frappe.model.std_fields_list.includes(fieldname)
 			|| frappe.meta.has_field(doctype, fieldname)
@@ -230,7 +233,7 @@ frappe.views.BaseList = class BaseList {
 	setup_filter_area() {
 		this.filter_area = new FilterArea(this);
 
-		if (this.filters.length > 0) {
+		if (this.filters && this.filters.length > 0) {
 			return this.filter_area.set(this.filters);
 		}
 	}
@@ -344,7 +347,8 @@ frappe.views.BaseList = class BaseList {
 			filters: this.get_filters_for_args(),
 			order_by: this.sort_selector.get_sql_string(),
 			start: this.start,
-			page_length: this.page_length
+			page_length: this.page_length,
+			view: this.view
 		};
 	}
 
@@ -540,7 +544,7 @@ class FilterArea {
 			out.promise = out.promise || Promise.resolve();
 			out.non_standard_filters = out.non_standard_filters || [];
 
-			if (fields_dict[fieldname] && condition === '=') {
+			if (fields_dict[fieldname] && (condition === '=' || condition === "like")) {
 				// standard filter
 				out.promise = out.promise.then(
 					() => fields_dict[fieldname].set_value(value)
@@ -614,7 +618,7 @@ class FilterArea {
 			let options = df.options;
 			let condition = '=';
 			let fieldtype = df.fieldtype;
-			if (['Text', 'Small Text', 'Text Editor', 'HTML Editor', 'Data', 'Code'].includes(fieldtype)) {
+			if (['Text', 'Small Text', 'Text Editor', 'HTML Editor', 'Data', 'Code', 'Read Only'].includes(fieldtype)) {
 				fieldtype = 'Data';
 				condition = 'like';
 			}
