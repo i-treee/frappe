@@ -56,7 +56,7 @@ class Webhook(Document):
 			if self.request_structure == "Form URL-Encoded":
 				self.webhook_json = None
 			elif self.request_structure == "JSON":
-				validate_json(self.webhook_json)
+#				validate_json(self.webhook_json)
 				validate_template(self.webhook_json)
 				self.webhook_data = []
 
